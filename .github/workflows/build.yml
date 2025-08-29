@@ -82,5 +82,7 @@ jobs:
         with:
           body: "Release redis ${{ steps.get_version.outputs.VERSION }}.  \n source: https://github.com/redis/redis/tree/${{ steps.get_version.outputs.VERSION }}"
           files: |
-            /tmp/amd64/redis-linux-${{ steps.get_version.outputs.VERSION }}.x86_64.tar.gz
-            /tmp/arm64/redis-linux-${{ steps.get_version.outputs.VERSION }}.aarch64.tar.gz
+            ver="${{ steps.get_version.outputs.VERSION }}"
+            echo "${ver}"
+            /tmp/amd64/redis-linux-${ver}-x86_64.tar.gz
+            /tmp/arm64/redis-linux-${ver}-aarch64.tar.gz
