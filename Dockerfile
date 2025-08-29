@@ -12,7 +12,7 @@ apk add --no-cache coreutils curl gcc make musl-dev openssl-dev git wget bash
 RUN mkdir -p /build
 WORKDIR /build
 RUN \
-curl -fS#L ${DOWNLOADURL} https://github.com/redis/redis/archive/${REDIS_VERSION}/redis-${REDIS_VERSION}.tar.gz | tar xz --strip-components=1; \
+curl -fS#L https://github.com/redis/redis/archive/${REDIS_VERSION}/redis-${REDIS_VERSION}.tar.gz | tar xz --strip-components=1; \
 make CFLAGS="-static" LDFLAGS="-static"; \
 cd src/; \
 ls -l; \
