@@ -1,0 +1,87 @@
+name: build and release by manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'version to build'
+        required: true
+        default: '6.2.19'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get version
+        id: get_version
+        run: echo ::set-output name=VERSION::${{ github.event.inputs.version }}
+
+      - name: Test version
+        run: |
+          echo ${{ steps.get_version.outputs.VERSION }}
+          echo ${{ github.ref }}
+
+      -
+        name: Set up QEMU
+        id: qemu
+        uses: docker/setup-qemu-action@v2
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+      -
+        name: Inspect builder
+        run: |
+          echo "Name:      ${{ steps.buildx.outputs.name }}"
+          echo "Endpoint:  ${{ steps.buildx.outputs.endpoint }}"
+          echo "Status:    ${{ steps.buildx.outputs.status }}"
+          echo "Flags:     ${{ steps.buildx.outputs.flags }}"
+          echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
+
+
+      - name: Build dockerfile (with no push)
+        run: |
+            ver="${{ steps.get_version.outputs.VERSION }}"
+            echo "${ver}"
+            ./buildx.sh --version ${ver} --push false --repo ${{ secrets.DOCKER_USERNAME }} --image-name redis-static-binaries
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build dockerfile (with push)
+        run: |
+            echo "Build dockerfile (with push)"
+            ver="${{ steps.get_version.outputs.VERSION }}"
+            echo "${ver}"
+            ./buildx.sh --version ${ver} --push true --repo ${{ secrets.DOCKER_USERNAME }} --image-name redis-static-binaries
+
+
+      - name: Fetch binary
+        shell: bash
+        run: |
+          ver="${{ steps.get_version.outputs.VERSION }}"
+          echo "${ver}"
+          mkdir -p /tmp/amd64
+          mkdir -p /tmp/arm64
+          docker run -i --rm --entrypoint="" -v /tmp/amd64:/tmp --platform linux/amd64 ${{ secrets.DOCKER_USERNAME }}/redis-static-binaries:${ver} sh -c "cp --verbose --force /build/src/redis-linux-${ver}-x86_64.tar.gz /tmp"
+          docker run -i --rm --entrypoint="" -v /tmp/arm64:/tmp --platform linux/arm64 ${{ secrets.DOCKER_USERNAME }}/redis-static-binaries:${ver} sh -c "cp --verbose --force /build/src/redis-linux-${ver}-aarch64.tar.gz /tmp"
+
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        # if: startsWith(github.ref, 'refs/tags/')
+        with:
+          body: "Release redis ${{ steps.get_version.outputs.VERSION }}.  \n source: https://github.com/redis/redis/tree/${{ steps.get_version.outputs.VERSION }}"
+          files: |
+            ver="${{ steps.get_version.outputs.VERSION }}"
+            echo "${ver}"
+            /tmp/amd64/redis-linux-${ver}-x86_64.tar.gz
+            /tmp/arm64/redis-linux-${ver}-aarch64.tar.gz
