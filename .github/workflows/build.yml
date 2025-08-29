@@ -2,6 +2,10 @@ name: build and release
 
 on:
   push:
+    branches-ignore:
+      - main
+    tags-ignore:
+      - main
     tags:
       # - "v*.*.*"
 
