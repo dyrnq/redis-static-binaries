@@ -65,6 +65,11 @@ jobs:
             ./buildx.sh --version ${ver} --push true --repo ${{ secrets.DOCKER_USERNAME }} --image-name redis-static-binaries
 
 
+      - name: docker logout
+        shell: bash
+        run: |
+          docker logout
+
       - name: Fetch binary
         shell: bash
         run: |
