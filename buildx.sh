@@ -53,7 +53,7 @@ done
 
 latest_tag=" --tag $repo/$image_name:$version"
 
-if grep -q centos7 <<< "$version"; then
+if grep -q centos7 <<< "$docker_file"; then
     latest_tag=" --tag $repo/$image_name:el7-$version"
 fi
 
