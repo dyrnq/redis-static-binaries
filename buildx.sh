@@ -8,8 +8,13 @@ repo="${repo:-dyrnq}"
 image_name="${image_name:-redis-static-binaries}"
 platforms="${platforms:-linux/amd64,linux/arm64/v8}"
 curl_opts="${curl_opts:-}"
+docker_file=${docker_file:-./Dockerfile}
 while [ $# -gt 0 ]; do
     case "$1" in
+        --docker-file)
+            docker_file="$2"
+            shift
+            ;;
         --base-image|--base)
             base_image="$2"
             shift
@@ -48,11 +53,15 @@ done
 
 latest_tag=" --tag $repo/$image_name:$version"
 
+if grep -q centos7 <<< "$version"; then
+    latest_tag=" --tag $repo/$image_name:el7-$version"
+fi
+
 docker buildx build \
 --platform ${platforms} \
 --output "type=image,push=${push}" \
 --build-arg REDIS_VERSION=${version} \
---file ./Dockerfile . \
+--file ${docker_file} . \
 ${latest_tag}
 
 
