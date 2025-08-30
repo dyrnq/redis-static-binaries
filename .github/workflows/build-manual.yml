@@ -1,4 +1,4 @@
-name: build and release by manual
+name: build manual alpine
 
 on:
   workflow_dispatch:
