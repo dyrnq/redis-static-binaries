@@ -11,7 +11,7 @@ RUN mkdir -p /build
 WORKDIR /build
 RUN \
 curl -fS#L https://github.com/redis/redis/archive/${REDIS_VERSION}/redis-${REDIS_VERSION}.tar.gz | tar xz --strip-components=1; \
-make CFLAGS="-static" LDFLAGS="-static"; \
+make USE_SYSTEMD=no USE_JEMALLOC=no CFLAGS="-static" LDFLAGS="-static"; \
 cd src/; \
 ls -l; \
 ls -l |grep -v -E ".c$|.h$|.d$|.o$|Makefile|modules|.rb$"; \
